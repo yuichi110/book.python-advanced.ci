@@ -1,0 +1,46 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build test image
+        env:
+          TARGET: test
+        run: docker-compose -f dockercompose.yml build
+      - name: Deploy test image
+        env:
+          TARGET: test
+        run: docker-compose -f dockercompose.yml up -d
+      - name: Analyze
+        run: |
+          docker container exec myapp flake8 -v
+          docker container exec myapp mypy myapp
+      - name: Test
+        run: docker container exec myapp pytest
+      - name: Prework for Scan
+        run: docker save -o myapp.tar myapp:local
+      - name: Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          input: /github/workspace/myapp.tar
+          severity: "CRITICAL,HIGH"
+      - name: Build production image
+        env:
+          TARGET: production
+        run: |
+          docker-compose -f dockercompose.yml build
+          docker image tag myapp:local ${{ secrets.DOCKERHUB_USERNAME }}/myapp:${{ github.sha }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v2.0.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Push production image
+        run: docker image push ${{ secrets.DOCKERHUB_USERNAME }}/myapp:${{ github.sha }}
