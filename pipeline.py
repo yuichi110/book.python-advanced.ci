@@ -89,13 +89,18 @@ class Pipeline:
         parser.add_argument(
             "--vulnerabilitycheck_skip",
             action="store_true",
-            help="skip vulnerability check(docker scan)",
+            help="skip vulnerability check",
         )
         parser.add_argument(
             "--vulnerabilitycheck_level",
             type=str,
             default="",
             help="specify checking severity level. supports high|midle|low. default is high",
+        )
+        parser.add_argument(
+            "--vulnerabilitycheck_ignore_unfixed",
+            action="store_true",
+            help="ignore unfixed vulnerability",
         )
         return parser
 
@@ -184,25 +189,48 @@ class Pipeline:
             )
             sys.exit(1)
 
+        if args.vulnerabilitycheck_skip + args.vulnerabilitycheck_ignore_unfixed > 1:
+            logging.critical(
+                "option --vulnerabilitycheck_skip and --vulnerabilitycheck_ignore_unfixed can't be used at same time."
+            )
+            sys.exit(1)
+
         if args.vulnerabilitycheck_skip:
             return []
 
-        fname = tempfile.NamedTemporaryFile().name
-        make_tar_command = f"docker save -o {fname}.tar myapp:local"
-        scan_coomand = f"docker run --mount type=bind,source='{fname}.tar',target=/image.tar,readonly aquasec/trivy image -f table --input /image.tar"
-        return [make_tar_command, scan_coomand]
-
-        """
         level = args.vulnerabilitycheck_level.lower().strip()
         if level == "":
             level = "high"
-        if level not in {"high", "medium", "low"}:
+        if level not in {"critical", "high", "medium", "low"}:
             logging.critical(
                 "option --vulnerabilitycheck_level supports high|medium|low"
             )
             sys.exit(1)
-        return [f"docker scan --severity={level} myapp:local"]
-        """
+
+        commands = []
+        fname = tempfile.NamedTemporaryFile().name
+        make_tar_command = f"docker save -o {fname}.tar myapp:local"
+        commands.append(make_tar_command)
+
+        vmap = {
+            "critical": ("low,medium,high", "critical"),
+            "high": ("low,medium", "high,critical"),
+            "medium": ("low", "medium,high,critical"),
+            "low": ("", "low,medium,high,critical"),
+        }
+        no_exit_sev = vmap[level][0]
+        exit_sev = vmap[level][1]
+        ignore_unfixed_option = (
+            "--ignore-unfixed" if args.vulnerabilitycheck_ignore_unfixed else ""
+        )
+
+        if no_exit_sev != "":
+            noexit_command = f"docker run --mount type=bind,source='{fname}.tar',target=/image.tar,readonly aquasec/trivy image --severity {no_exit_sev} {ignore_unfixed_option} -f table --input /image.tar"
+            commands.append(noexit_command)
+        exit_command = f"docker run --mount type=bind,source='{fname}.tar',target=/image.tar,readonly aquasec/trivy image --severity {exit_sev} {ignore_unfixed_option} --exit-code 1 -f table --input /image.tar"
+        commands.append(exit_command)
+
+        return commands
 
     def _cd_to_script_directory(self):
         abspath = os.path.abspath(__file__)

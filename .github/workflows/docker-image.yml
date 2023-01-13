@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Container Image CI
 
 on:
   push:
@@ -18,19 +18,27 @@ jobs:
         env:
           TARGET: test
         run: docker-compose -f dockercompose.yml up -d
+
       - name: Analyze
         run: |
           docker container exec myapp flake8 -v
           docker container exec myapp mypy myapp
-      - name: Test
+      - name: Unit test
         run: docker container exec myapp pytest
       - name: Prework for Scan
         run: docker save -o myapp.tar myapp:local
-      - name: Scan
+      - name: Scan Medium,Low (ignore)
+        uses: aquasecurity/trivy-action@master
+        with:
+          input: /github/workspace/myapp.tar
+          severity: "MEDIUM,LOW"
+      - name: Scan Critical,High (exit with error)
         uses: aquasecurity/trivy-action@master
         with:
           input: /github/workspace/myapp.tar
           severity: "CRITICAL,HIGH"
+          exit-code: "1"
+
       - name: Build production image
         env:
           TARGET: production

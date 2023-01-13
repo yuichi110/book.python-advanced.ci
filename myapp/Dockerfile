@@ -1,4 +1,4 @@
-FROM python:3.10-slim AS production
+FROM python:3.10-alpine AS production
 WORKDIR /app
 COPY pyproject.toml /app
 RUN pip install .
