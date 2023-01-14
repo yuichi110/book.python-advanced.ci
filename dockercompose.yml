@@ -9,4 +9,24 @@ services:
     image: myapp:local
     container_name: myapp
     ports:
-      - "8080:80"
+      - "80:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      - "db"
+
+  db:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    image: db:local
+    container_name: db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres

@@ -2,6 +2,7 @@
 name = "myapp"
 version = "0.1"
 dependencies = [
+    "psycopg2-binary==2.9.5",
     "fastapi==0.88.0",
     "uvicorn==0.20.0",
 ]
@@ -10,5 +11,6 @@ dependencies = [
 test = [
     "flake8==6.0.0",
     "mypy==0.991",
+    "types-psycopg2",
     "pytest==7.2.0",
 ]
