@@ -20,3 +20,9 @@ class Repository:
         result = cur.fetchall()
         cur.close()
         return result
+
+    def delete_all_items(self):
+        cur = self._connection.cursor()
+        cur.execute("TRUNCATE TABLE public.item;")
+        self._connection.commit()
+        cur.close()

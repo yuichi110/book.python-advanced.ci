@@ -13,4 +13,5 @@ test = [
     "mypy==0.991",
     "types-psycopg2",
     "pytest==7.2.0",
+    "pytest-order==1.0.1",
 ]

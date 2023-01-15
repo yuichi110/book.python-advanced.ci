@@ -1,7 +1,7 @@
 from myapp.repository import Repository
 
 
-class IndexService:
+class ItemService:
     def __init__(self, repository: Repository):
         self._repository = repository
 
@@ -10,5 +10,8 @@ class IndexService:
 
     def get_items(self):
         original_items = self._repository.get_items()
-        items = [item[1] for item in original_items]
+        items = [{"id": item[0], "name": item[1]} for item in original_items]
         return items
+
+    def delete_all_items(self):
+        self._repository.delete_all_items()
