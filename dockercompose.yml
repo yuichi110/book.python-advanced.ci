@@ -1,29 +1,29 @@
 version: "3.7"
 
 services:
-  myapp:
+  myapp.app:
     build:
-      context: ./myapp
+      context: ./app
       dockerfile: Dockerfile
       target: ${TARGET}
-    image: myapp:local
-    container_name: myapp
+    image: myapp.app:local
+    container_name: myapp.app
     ports:
       - "80:80"
     environment:
-      DB_HOST: db
+      DB_HOST: myapp.db
       DB_NAME: postgres
       DB_USER: postgres
       DB_PASSWORD: postgres
     depends_on:
       - "db"
 
-  db:
+  myapp.db:
     build:
       context: ./db
       dockerfile: Dockerfile
-    image: db:local
-    container_name: db
+    image: myapp.db:local
+    container_name: myapp.db
     ports:
       - "5432:5432"
     environment:

@@ -134,8 +134,8 @@ class Pipeline:
         return [f"docker-compose -f {COMPOSE_FILE} up -d"]
 
     def _get_analyze_commands(self, args):
-        lint_command = "docker container exec myapp flake8 -v"
-        type_check_command = "docker container exec myapp mypy myapp"
+        lint_command = "docker container exec myapp.app flake8 -v"
+        type_check_command = "docker container exec myapp.app mypy myapp"
 
         if (
             args.codeanalysis_skip
@@ -166,7 +166,7 @@ class Pipeline:
         if args.test_skip:
             return []
         if not args.test_options:
-            return ["docker container exec myapp pytest"]
+            return ["docker container exec myapp.app pytest"]
 
         try:
             commands = []
@@ -209,7 +209,7 @@ class Pipeline:
 
         commands = []
         fname = tempfile.NamedTemporaryFile().name
-        make_tar_command = f"docker save -o {fname}.tar myapp:local"
+        make_tar_command = f"docker save -o {fname}.tar myapp.app:local"
         commands.append(make_tar_command)
 
         vmap = {

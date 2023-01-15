@@ -21,21 +21,21 @@ jobs:
 
       - name: Analyze
         run: |
-          docker container exec myapp flake8 -v
-          docker container exec myapp mypy myapp
+          docker container exec myapp.app flake8 -v
+          docker container exec myapp.app mypy myapp
       - name: Unit test
-        run: docker container exec myapp pytest
+        run: docker container exec myapp.app pytest
       - name: Prework for Scan
-        run: docker save -o myapp.tar myapp:local
+        run: docker save -o myapp.app.tar myapp.app:local
       - name: Scan Medium,Low (ignore)
         uses: aquasecurity/trivy-action@master
         with:
-          input: /github/workspace/myapp.tar
+          input: /github/workspace/myapp.app.tar
           severity: "MEDIUM,LOW"
       - name: Scan Critical,High (exit with error)
         uses: aquasecurity/trivy-action@master
         with:
-          input: /github/workspace/myapp.tar
+          input: /github/workspace/myapp.app.tar
           severity: "CRITICAL,HIGH"
           exit-code: "1"
 
@@ -44,11 +44,11 @@ jobs:
           TARGET: production
         run: |
           docker-compose -f dockercompose.yml build
-          docker image tag myapp:local ${{ secrets.DOCKERHUB_USERNAME }}/myapp:${{ github.sha }}
+          docker image tag myapp.app:local ${{ secrets.DOCKERHUB_USERNAME }}/myapp.app:${{ github.sha }}
       - name: Login to DockerHub
         uses: docker/login-action@v2.0.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Push production image
-        run: docker image push ${{ secrets.DOCKERHUB_USERNAME }}/myapp:${{ github.sha }}
+        run: docker image push ${{ secrets.DOCKERHUB_USERNAME }}/myapp.app:${{ github.sha }}
