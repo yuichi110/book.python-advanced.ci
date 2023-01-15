@@ -13,11 +13,11 @@ jobs:
       - name: Build test image
         env:
           TARGET: test
-        run: docker-compose -f dockercompose.yml build
+        run: docker-compose -f docker-compose.yml build
       - name: Deploy test image
         env:
           TARGET: test
-        run: docker-compose -f dockercompose.yml up -d
+        run: docker-compose -f docker-compose.yml up -d
 
       - name: Analyze
         run: |
@@ -43,7 +43,7 @@ jobs:
         env:
           TARGET: production
         run: |
-          docker-compose -f dockercompose.yml build
+          docker-compose -f docker-compose.yml build
           docker image tag myapp.app:local ${{ secrets.DOCKERHUB_USERNAME }}/myapp.app:${{ github.sha }}
           docker image tag myapp.db:local ${{ secrets.DOCKERHUB_USERNAME }}/myapp.db:${{ github.sha }}
       - name: Login to DockerHub

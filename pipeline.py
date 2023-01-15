@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tempfile
 
-COMPOSE_FILE = "dockercompose.yml"
+COMPOSE_FILE = "docker-compose.yml"
 COMPOSE_ENV_TARGET = "test"
 
 
