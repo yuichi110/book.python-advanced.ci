@@ -16,7 +16,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
     depends_on:
-      - "db"
+      - "myapp.db"
 
   myapp.db:
     build:
